@@ -60,6 +60,12 @@ function getFile(name:string, size = 1000): Promise<File> {
 
 const settlePromise = <T>(promise: Promise<T>) => promise.then(value => ({status: 'fulfilled', value})).catch(reason => ({status:'rejected', reason}))
 
+
+async function executeWithLimit<T>(promises: Promise<T>[], limit: number):Promise<T> {
+    const result1 = await Promise.all([promises.s])
+}
+
+
 async function getFiles() {
     try {
         const files = await Promise.all([
