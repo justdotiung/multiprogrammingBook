@@ -1,3 +1,5 @@
+import { fx } from "./fxIterable";
+
 export = {};
 
 function delay<T>(time:number, value: T): Promise<T> {
@@ -55,15 +57,52 @@ type File = {
 }
 
 function getFile(name:string, size = 1000): Promise<File> {
+    console.log(123)
     return delay(size, {name, body: '...', size})
 }
 
 const settlePromise = <T>(promise: Promise<T>) => promise.then(value => ({status: 'fulfilled', value})).catch(reason => ({status:'rejected', reason}))
 
 
-async function executeWithLimit<T>(promises: Promise<T>[], limit: number):Promise<T> {
-    const result1 = await Promise.all([promises.s])
+// fx([1,2,3,4,5]).chunk(2).forEach(arr => console.log(arr))
+
+
+async function fromAsync<T>(iterable : Iterable<Promise<T>>| AsyncIterable<T>): Promise<T[]> {
+    const arr: T[] = [];
+    for await (const a of iterable) {
+        arr.push(a)
+    }
+    
+    return arr;
 }
+
+
+async function executeWithLimit<T>(fs: (() => Promise<T>)[], limit: number):Promise<T[]> {
+    return fx(fs)
+    .map(f => f())
+    .chunk(limit)
+    .map(ps => Promise.all(ps))
+    .to(fromAsync)
+    .then(arr => arr.flat())
+}
+
+async function test5() {
+    const files: File[] = await executeWithLimit([
+        () => getFile("Image.png"),
+        () => getFile("Image.png"),
+        () => getFile("Image.png"),
+        () => getFile("Image.png"),
+        // () => getFile("Image.png"),
+        // () => getFile("Image.png"),
+        // () => getFile("Image.png"),
+        // () => getFile("Image.png"),
+        // () => getFile("Image.png"),
+        // () => getFile("Image.png"),
+    ], 3)
+
+    console.log(files);
+}
+
 
 
 async function getFiles() {
@@ -102,7 +141,7 @@ async function getFiles2() {
         const files = await Promise.any([
             getFile("img.png", 1500),
             getFile("book.pdf", 1000),
-            getFile("index.html", 500),
+            getFile("index.html", 5100),
             Promise.reject("fail...")
         ])
         
@@ -123,7 +162,8 @@ async function getFiles2() {
 
 (function main() {
     // renderFriendsPicker();
-    getFiles2()
+    // getFiles2()
+    test5();
 
 })()
 

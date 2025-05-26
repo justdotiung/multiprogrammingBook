@@ -108,10 +108,95 @@ function reduce<T,U>(f:(acc:U|T, c:T) => U, accOrIterable:U|Iterable<T>, iterabl
 }
 
 
+function* take<A>(limit:number, iterable: Iterable<A>):IterableIterator<A> {
+    const iterator = iterable[Symbol.iterator]();
+    while(true) {
+        const {value, done} =iterator.next();
+
+        if(done) break;
+
+        yield value;
+        if( --limit === 0) break;
+    }
+}
+
+function find<T>(f:(v: T) => boolean, iterable: Iterable<T>): T | undefined {
+    return filter(f, iterable).next().value
+}
+
+const head = <T>(
+    iterable: Iterable<T>
+): T | undefined => iterable[Symbol.iterator]().next().value;
+
+const v = find(v => v > 2, naturals(5));
+// console.log(v);
 // console.log(reduce((acc, v) => acc + v, 0, [1,2,3]))
 
 function printNumber(n:number) {
     console.log(n);
 }
 
-forEach(printNumber, [reduce((acc, c) => acc += c,map(v => v + 1,filter(v => v % 2 ===0 , naturals(5))))])
+function accumulateWith<A>(
+    accumulator: (a: boolean, b: boolean) => boolean,
+    acc:boolean,
+    taking: (a: boolean) => boolean,
+    f: (a: A) => boolean,
+    iterable: Iterable<A>
+) {
+
+
+    return reduce(accumulator,acc, take(1,filter(taking,map(f, iterable))) )
+}
+
+function every<A>(f: (a: A) => boolean, iterable: Iterable<A>): boolean {
+    // return fx(iterable).map(f).filter(a => a).take(1).reduce((a,c) => a && c, true)
+    // return reduce((a, c)=> a && c, true,  take(1, filter( a => !a, map( f, iterable ))))
+    return accumulateWith((a,b) => a && b, true, a => !a,f, iterable )
+};
+
+function some<A>(f: (a: A) => boolean, iterable: Iterable<A>): boolean {
+    // return fx(iterable).map(f).filter(a => !a).take(1).reduce((a,c) => a || c, false)
+    // return reduce((a, c)=> a || c, false,  take(1, filter( a => a, map( f, iterable ))))
+    return accumulateWith((a,b) => a || b, false, a => a,f, iterable )
+}
+
+function* concat<A>(...iterables: Iterable<A>[]): IterableIterator<A> {
+    for(const iterable of iterables) yield* iterable;
+}
+
+function* chunk<T>(size: number, iterable: Iterable<T>): IterableIterator<T[]> {
+    const iterator = iterable[Symbol.iterator]();
+    while(true) {
+        const arr= [
+            ...take(size, {
+                [Symbol.iterator]() {
+                    return iterator
+                }
+            }
+            )
+        ]
+        if(arr.length) yield arr;
+        if(arr.length < size) break;
+    }
+}
+
+
+// console.log([...chunk(2, naturals(5))]);
+
+// console.log(reduce((a, c)=> a && c, true,  take(1, filter( a => !a, map( v => v %2 === 1, [1,2,3] )))))
+
+// console.log(every(v => v > 2, [0,1]))
+// console.log(every(v => v > 2, [3,4]))
+// console.log(some(v => v % 2 === 1, [2,5,6]))
+// console.log(some(v => v % 2 === 1, [2,4,6]))
+
+// console.log(every(v => v % 2 === 1, [1,3,5]));
+// console.log(every(v => v % 2 === 1, [1,2,5]));
+
+// console.log(every(v => v > 1, [1,2,3]));
+// console.log(every(v => v > 1, [0]));
+
+// forEach(printNumber, [reduce((acc, c) => acc += c,map(v => v + 1,filter(v => v % 2 ===0 , naturals(5))))])
+
+
+export { generator, naturals, constanct, map, forEach, filter, reduce, printNumber, take, every, some, concat, chunk };
