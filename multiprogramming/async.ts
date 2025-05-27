@@ -1,6 +1,6 @@
 import { fx } from "./fxIterable";
 
-export = {};
+export = {delay};
 
 function delay<T>(time:number, value: T): Promise<T> {
     return new Promise((r)=> setTimeout(r, time, value))
@@ -15,6 +15,7 @@ function getRandomValue<T>(a:T, b:T):T {
     const randomIndex = Math.floor(Math.random() * 2);
     return randomIndex === 0 ? a: b;
 }
+
 
 type User = {
     name:string;
@@ -123,48 +124,76 @@ async function getFiles() {
 
 
 async function getFiles2() {
-    // const files = await Promise.allSettled([
-    //     getFile("img.png", 1500),
-    //     getFile("book.pdf", 1000),
-    //     getFile("index.html", 500),
-    //     Promise.reject("fail...")
-    // ])
-    
-    // const files = await Promise.allSettled([
-    //     getFile("img.png", 1500),
-    //     getFile("book.pdf", 1000),
-    //     getFile("index.html", 500),
-    //     Promise.reject("fail...")
-    // ].map(settlePromise))
     try {
 
-        const files = await Promise.any([
-            getFile("img.png", 1500),
-            getFile("book.pdf", 1000),
-            getFile("index.html", 5100),
-            Promise.reject("fail...")
-        ])
-        
-        console.log(files);
-        
-        const files2 = await Promise.any([
-            delayReject(200, 'fail...'),
-            delayReject(300, 'fail...'),
-        ])
-        
-        console.log(files2)
+        await delay(500,Promise.reject("fail..."))
     }catch(e) {
         console.error(e)
     }
 }
 
+async function* stringsAsyncTest() {
+    yield delay(1000, "a");
+
+    const b = await delay(500, "b") + "c";
+
+    yield b;
+}
+
+async function test6() {
+    const asyncItertor:AsyncIterableIterator<string> = stringsAsyncTest()
+    const result1 = await asyncItertor.next();
+    console.log(result1.value)
+    const result2 = await asyncItertor.next()
+    console.log(result2.value)
+
+    const { done } = await asyncItertor.next();
+
+    console.log(done);
+}
+
+function toAsync2<T>(iterable:Iterable<T|Promise<T>>):AsyncIterable<Awaited<T>> {
+    return  {
+        [Symbol.asyncIterator]():AsyncIterable<Awaited<T>> {
+            const iterator = iterable[Symbol.iterator]();
+            return {
+                async next() {
+                    const { value, done} = iterator.next();
+                    return done ? {value, done} : { value : await value, done }
+                }
+            
+            }
+        }
+    }
+}
 
 
-(function main() {
+async function test7() {
+    const asyncIterable =toAsync2([1]);
+    const asyncIterator = asyncIterable[Symbol.asyncIterator]();
+    await asyncIterator.next().then(({value}) => console.log(value));
+    await asyncIterator.next().then(({value}) => console.log(value));
+
+    const asyncIterable2 = toAsync2([Promise.resolve('a')])
+    const asyncIterator2 = asyncIterable2[Symbol.asyncIterator]();
+    await asyncIterator2.next().then(({value}) => console.log(value))
+    await asyncIterator2.next().then((value) => console.log(value))
+}
+
+async function test11() {
+    for await ( const a of toAsync2([1,2])) console.log(a);
+    for await ( const a of toAsync2([Promise.resolve(11),Promise.resolve(22)])) console.log(a);
+    for await ( const a of [1,2]) console.log(a);
+    for await ( const a of [ Promise.resolve(11),Promise.resolve(22)]) console.log(a);
+}
+
+( function main() {
     // renderFriendsPicker();
     // getFiles2()
-    test5();
-
+    // test5();
+    // test6()
+    //  test7()
+    // test11()
 })()
 
 async function test3 (){
