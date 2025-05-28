@@ -1,8 +1,6 @@
-import { fx } from "./fxIterable";
+import { fx } from "./FxIterable";
 
-export = {delay};
-
-function delay<T>(time:number, value: T): Promise<T> {
+export function delay<T>(time:number, value: T): Promise<T> {
     return new Promise((r)=> setTimeout(r, time, value))
 }
 
@@ -68,7 +66,7 @@ const settlePromise = <T>(promise: Promise<T>) => promise.then(value => ({status
 // fx([1,2,3,4,5]).chunk(2).forEach(arr => console.log(arr))
 
 
-async function fromAsync<T>(iterable : Iterable<Promise<T>>| AsyncIterable<T>): Promise<T[]> {
+export async function fromAsync<T>(iterable : Iterable<Promise<T>>| AsyncIterable<T>): Promise<T[]> {
     const arr: T[] = [];
     for await (const a of iterable) {
         arr.push(a)
