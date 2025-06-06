@@ -54,6 +54,8 @@ function* map<T,U>(f:(a:T) => U, iter: Iterable<T>): IterableIterator<U> {
     }
 }
 
+// console.log([...map(a => a * 2, [1,2,3][Symbol.iterator]())])
+
 // const mapped = map((v) => v + 1 , naturals(10));
 // const iter = mapped[Symbol.iterator]();
 // console.log(iter.next())

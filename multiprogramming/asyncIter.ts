@@ -117,7 +117,7 @@ async function test() {
         const iter3: AsyncIterableIterator<string> = map((a) => Promise.resolve(a.toFixed()), toAsync([1,2,3]));
         const iter4: AsyncIterableIterator<string> = map((a) => Promise.resolve(a.toFixed()), toAsync([Promise.resolve(1),2,3]));
 
-        console.log([...map(a => a * 10, [1,2])])
+        console.log(await map(a => a * 10, toAsync([1,2])))
 
         for await (const  v of map(a => delay(100, a * 10), toAsync([1,2]))) {
             console.log(v);
@@ -167,8 +167,8 @@ async function test2() {
     const resultPromise = await fx(naturals(4)).filter(isOdd).map(a => a *10).toAsync().reduce((acc, a) => acc + a, 0)
 
     console.log(result, resultPromise)
-
-
+    const a =  await fromAsync(map(a => a * 10, toAsync([1,2])));
+    console.log([...a])
 }
 
 (function main() {
